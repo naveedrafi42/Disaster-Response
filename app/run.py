@@ -26,11 +26,40 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('categorised_messages', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/classifier.pkl")
+
+
+# function to get message counts and categorical breakdown
+def get_stats(df):
+    """This function calculates total number of messages overall plus
+    per category
+    
+    Input:
+        df: This is a pandas dataframe containing the clean data
+        
+    Output:
+        message_count: Integer for total number of messages
+        categorical_message_counts_df: pandas dataframe with categorical 
+        message counts
+        categories: list of categories in the dataset
+        
+    """
+    message_count = len(df)
+
+    categories = df.drop(['id', 'message', 'original', 'genre'], axis=1).columns
+
+    cat_msg_counts = []
+
+    for category in categories:
+        cat_msg_counts.append(len(df[df[category] != 0]))
+
+    categorical_message_counts_df = pd.DataFrame(cat_msg_counts, columns=['Message Counts'], index=categories)
+    
+    return message_count, categorical_message_counts_df.sort_values(by=['Message Counts'], ascending=False), categories
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -42,6 +71,11 @@ def index():
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+    
+    total_messages, cat_counts, categories = get_stats(df)
+    
+    # convert df into series
+    cat_count = cat_counts["Message Counts"]
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
@@ -61,6 +95,28 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=categories,
+                    y=cat_count
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Message Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Categories",
+                    'tickangle': 45
+                },
+                'margin': {
+                    'b': 160
                 }
             }
         }

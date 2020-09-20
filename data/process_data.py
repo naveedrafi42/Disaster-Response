@@ -3,6 +3,18 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    """This function loads messages and category data, left joins the two 
+    based on 'id' and returns a pandas dataframe.
+    
+    The function will raised an error if input is invalid or data doesn't exist.
+    
+    Input:
+        messages_filepath: location of messages data file from the project root
+        categories_filepath: location of categories data file from the project root
+        
+    Output:
+        df: Dataframe containing the joined dataset.
+    """
     # load messages dataset
     messages = pd.read_csv(messages_filepath)
     
@@ -15,6 +27,17 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
+    """This function cleans and prepares the raw data set into 
+    one that is easier to work with. Also drops duplicates.
+    
+    Input:
+        df: Dataframe containing raw, joined data
+        
+    Output:
+        df: Dataframe containing one column per category using
+        '0', '1', '2' as flags to indicate whether or not the 
+        message belongs to category mentioned as column name
+    """
     # create a dataframe of the 36 individual category columns
     categories = df["categories"].str.split(";", expand=True)
     
@@ -46,6 +69,12 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
+    """This function saves the prepared data into an sqllite database file
+    
+    Input:
+        df: Dataframe with clean data
+        database_filename: path of where to store the data for model ingestion
+    """
     engine = create_engine(f'sqlite:///{database_filename}')
     df.to_sql('categorised_messages', engine, index=False)
 

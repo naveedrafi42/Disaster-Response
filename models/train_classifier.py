@@ -69,7 +69,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
     
     for i, column in enumerate(category_names):
         print("Report for target column: " + column)
-        print(classification_report(y_test.values[:, i], y_pred[:,i], target_names=["0", "1"]))
+        print(classification_report(Y_test.values[:, i], y_pred[:,i], target_names=["0", "1"]))
 
 
 def save_model(model, model_filepath):
