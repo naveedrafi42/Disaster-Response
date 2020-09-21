@@ -19,6 +19,16 @@ url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-
 
 
 def load_data(database_filepath):
+    """This function loads the processed data from the supplied database filepath
+    
+    Input:
+        1- database_filepath: location of the sql lite file where ML data is present
+     
+    Output:
+        1- X: this is the message column of df
+        2- Y: this is the target variable columns
+        3- Y.columns: this is a list of all target variables
+    """
     # load data from database
     engine = create_engine(f'sqlite:///{database_filepath}')
     df = pd.read_sql_table('categorised_messages', engine) 
@@ -30,6 +40,14 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    """This function breaks texts into tokens. Also replaces URLs and lemmatizes the tokens
+    for consistency.
+    
+    Input:
+        1- Text: Sentence of paragraph
+    Output:
+        1- List of tokens
+    """
     detected_urls = re.findall(url_regex, text)
     for url in detected_urls:
         text = text.replace(url, "urlplaceholder")
@@ -46,6 +64,13 @@ def tokenize(text):
 
 
 def build_model():
+    """This is the main training function. It uses a pipeline object 
+    to group together CountVectorizer, TfidfTransformer, and 
+    MultiOutputClassifier which uses RandomForestClassifier.
+    
+    It also makes use of the GridSearch of vect__max_features but 
+    this can be changed to improve the model.
+    """
     # create model pipeline
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
@@ -65,6 +90,8 @@ def build_model():
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    """This function is used for model evaluation.
+    """
     y_pred = model.predict(X_test)
     
     for i, column in enumerate(category_names):
@@ -73,10 +100,14 @@ def evaluate_model(model, X_test, Y_test, category_names):
 
 
 def save_model(model, model_filepath):
+    """Function to save the trained model as a pickle file
+    """
     pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():
+    """Main training function that loads, trains and saves the trained classifier.
+    """
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))

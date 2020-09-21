@@ -12,3 +12,14 @@
     `python run.py`
 
 3. Go to http://0.0.0.0:3001/
+
+### Libraries Required:
+
+Please ensure the following libraries are installed in your environment:
+1. pandas
+2. nltk
+3. flask
+4. sklearn
+5. sqllchemy
+6. plotly
+

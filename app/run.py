@@ -34,7 +34,7 @@ model = joblib.load("../models/classifier.pkl")
 
 
 # function to get message counts and categorical breakdown
-def get_stats(df):
+def get_category_stats(df):
     """This function calculates total number of messages overall plus
     per category
     
@@ -62,20 +62,43 @@ def get_stats(df):
     return message_count, categorical_message_counts_df.sort_values(by=['Message Counts'], ascending=False), categories
 
 
+def get_multiclass_msg_stats(df):
+    """This function calculates how many messages appear in different categories
+    
+    Input:
+        df: This is a pandas dataframe containing the clean data
+        
+    Output:
+        multiclass_msgs: Dataframe containing number of categories a message falls in
+            and the count of message for each
+        
+    """
+    
+    categories = df.drop(['id', 'message', 'original', 'genre'], axis=1)
+    categories['total_categories'] = categories.sum(axis=1)
+    multiclass_msgs = categories.groupby('total_categories').count()[['related']]
+    multiclass_msgs.columns = ['total']
+    
+    return multiclass_msgs
+
+
 # index webpage displays cool visuals and receives user input text for model
 @app.route('/')
 @app.route('/index')
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
+    # visualisation 1: default
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
-    total_messages, cat_counts, categories = get_stats(df)
-    
+    # visualisation 2
+    total_messages, cat_counts, categories = get_category_stats(df)
     # convert df into series
     cat_count = cat_counts["Message Counts"]
+    
+    # visualisation 2
+    multiclass_msgs_data = get_multiclass_msg_stats(df)
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
@@ -113,6 +136,28 @@ def index():
                 },
                 'xaxis': {
                     'title': "Categories",
+                    'tickangle': 45
+                },
+                'margin': {
+                    'b': 160
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=multiclass_msgs_data.index.tolist(),
+                    y=multiclass_msgs_data['total'].tolist()
+                )
+            ],
+
+            'layout': {
+                'title': 'Number of messages falling into multiple categories',
+                'yaxis': {
+                    'title': "Number of message"
+                },
+                'xaxis': {
+                    'title': "Number of categories",
                     'tickangle': 45
                 },
                 'margin': {
